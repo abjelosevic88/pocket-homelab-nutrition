@@ -1,0 +1,23 @@
+[Unit]
+Description=Pocket Nutrition — your training log
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pocket-nutrition
+Group=pocket-nutrition
+ExecStart=/usr/local/bin/pocket-nutrition
+Environment=DATA_DIR=/var/lib/pocket-nutrition
+Environment=PORT=8080
+Environment=BASE_URL=https://nutrition.example.com
+Environment=SECURE_COOKIES=true
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/pocket-nutrition
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
