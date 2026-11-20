@@ -92,4 +92,4 @@ Every payload has `user_email`.
 
 ## Box
 
-`GET /export.json` (everything of yours), `GET /export.csv` (the diary), `POST /import` (a Pocket Nutrition `.json` or `.csv`, MyFitnessPal's "Nutrition Summary" CSV, Cronometer's "Servings" CSV; importing again adds nothing), `GET /backup` (admin: the whole database).
+`GET /export.json` (everything of yours), `GET /export.csv` (the diary), `POST /import` (a Pocket Nutrition `.json` or `.csv`, MyFitnessPal's "Nutrition Summary" CSV, Cronometer's "Servings" CSV; importing again adds nothing), `GET /backup` (admin: the whole database). `GET /pocket/portable`: Pocket Move can copy your food diary out and bring it in (`move:export` / `move:import` links).
