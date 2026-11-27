@@ -75,6 +75,8 @@ Set `CORE_URL` and `CORE_REGISTRATION_KEY` and Nutrition joins the box: people s
 
 Other apps can read and log your food (`nutrition:read`: each day's meals in Pocket Day's journal, the Nutrition card in Pocket AI's briefing, the `pocket_nutrition_*` tools Pocket AI uses to answer “how much protein did I have today?”; `nutrition:write`: “log two eggs and toast for breakfast” from Pocket AI). Events: `nutrition.meal_logged`, `nutrition.day_summary`, `nutrition.goal_met`, `nutrition.streak`.
 
+Pocket Search, Pocket Day and Pocket Hub find Nutrition on their own. Nutrition tells Pocket Core what it can do and answers on four fixed addresses, one link each, always as the person asking: `GET /api/v1/pocket/search` (your foods and saved meals by name, and the days you ate a food; `!nutrition` or `!food` in Pocket Search), `GET /api/v1/pocket/day/{date}` (what you ate that day, meal by meal, with the calories against your goal and the water), `GET /api/v1/pocket/widget` ("Today's food": today's calories against your goal, protein, carbs, fat and water, and each meal so far) and `POST /api/v1/pocket/capture` (a line typed in the Hub is logged in the meal for this hour: one of your foods by its name, or a name with its calories like "Cake at work 350 kcal"; sent twice, it is still one entry). Nothing about Nutrition has to be added to those apps.
+
 ## Develop
 
 ```sh

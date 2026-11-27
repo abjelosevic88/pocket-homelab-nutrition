@@ -34,6 +34,17 @@ var portable = &core.Portable{
 	},
 }
 
+// capabilities is what Pocket Search, Pocket Day and Pocket Hub may ask
+// (docs/capabilities.md in pocket-homelab-core): the manifest, the four
+// /api/v1/pocket/* routes and linkAllows all use this one value.
+var capabilities = core.Capabilities{
+	Search: &core.Searchable{What: "Your foods and saved meals by name, and the days you ate a food", Kinds: []string{"food", "meal", "entry"}, Bangs: []string{"nutrition", "food"}},
+	Day:    &core.DayFeed{Label: "Nutrition", One: "entry", Many: "entries", What: "What you ate that day, meal by meal, with the calories and the water"},
+	Widget: &core.Widget{Title: "Today's food", What: "Today's calories against your goal, protein, carbs, fat and water, and each meal so far"},
+	Capture: &core.QuickCapture{Kinds: []core.CaptureKind{{Kind: "food", Label: "Food",
+		What: "One of your foods by its name, or a name with its calories (\"Cake 350 kcal\"), logged in the meal for this hour", Fields: []string{"date"}}}},
+}
+
 type linkRoute struct {
 	methods string
 	path    *regexp.Regexp
@@ -53,7 +64,7 @@ var errLinkScope = errors.New("outside the link's scope")
 
 // linkAllows reports whether a link token with these scopes may make this request.
 func linkAllows(scopes []string, r *http.Request) bool {
-	if portable.LinkAllows(scopes, r) {
+	if portable.LinkAllows(scopes, r) || capabilities.LinkAllows(scopes, r) {
 		return true
 	}
 	for _, lr := range linkRoutes {

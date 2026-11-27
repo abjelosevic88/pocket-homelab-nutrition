@@ -93,20 +93,37 @@ func (s *Store) EntryBySource(ctx context.Context, uid int64, source, ref string
 	return e, notFound(err)
 }
 
+// execer is the database or a transaction.
+type execer interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+}
+
 // CreateEntry adds an entry at the end of its meal.
 func (s *Store) CreateEntry(ctx context.Context, uid int64, e *Entry) error {
+	return createEntry(ctx, s.DB, uid, e)
+}
+
+// CreateEntryTx is CreateEntry inside a transaction, for an entry written
+// together with something else (a quick capture's receipt).
+func (s *Store) CreateEntryTx(ctx context.Context, tx *sql.Tx, uid int64, e *Entry) error {
+	return createEntry(ctx, tx, uid, e)
+}
+
+func createEntry(ctx context.Context, db execer, uid int64, e *Entry) error {
 	if e.FoodID != nil && *e.FoodID > 0 {
-		if _, err := s.GetFood(ctx, uid, *e.FoodID); err != nil {
-			return err
+		var one int
+		if err := db.QueryRowContext(ctx, `SELECT 1 FROM foods WHERE id=? AND user_id=?`, *e.FoodID, uid).Scan(&one); err != nil {
+			return notFound(err)
 		}
 	} else {
 		e.FoodID = nil
 	}
-	if err := s.DB.QueryRowContext(ctx, `SELECT COALESCE(MAX(position), -1) + 1 FROM entries WHERE user_id=? AND date=? AND meal=?`, uid, e.Date, e.Meal).Scan(&e.Position); err != nil {
+	if err := db.QueryRowContext(ctx, `SELECT COALESCE(MAX(position), -1) + 1 FROM entries WHERE user_id=? AND date=? AND meal=?`, uid, e.Date, e.Meal).Scan(&e.Position); err != nil {
 		return err
 	}
 	now := Now()
-	res, err := s.DB.ExecContext(ctx, `INSERT INTO entries (user_id, date, meal, position, food_id, name, qty, serving, amount, unit, kcal, protein, carbs, fat,
+	res, err := db.ExecContext(ctx, `INSERT INTO entries (user_id, date, meal, position, food_id, name, qty, serving, amount, unit, kcal, protein, carbs, fat,
 		fiber, sugar, sat_fat, sodium, note, source, source_ref, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		uid, e.Date, e.Meal, e.Position, nullI(e.FoodID), e.Name, e.Qty, e.Serving, e.Amount, e.Unit, e.Kcal, e.Protein, e.Carbs, e.Fat,
 		pf(e.Fiber), pf(e.Sugar), pf(e.SatFat), pf(e.Sodium), e.Note, e.Source, e.SourceRef, now, now)

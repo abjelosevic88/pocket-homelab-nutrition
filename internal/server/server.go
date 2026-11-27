@@ -210,12 +210,13 @@ func (s *Server) manifest() core.Manifest {
 	m := core.Manifest{
 		Slug: "nutrition", Name: "Pocket Nutrition",
 		Description: "Your food diary: what you eat meal by meal with calories, protein, carbs and fat, water, daily goals worked out for you, your own foods, saved meals and a built-in list, and barcodes looked up on Open Food Facts. It logs recipes from Pocket Kitchen, takes your weight and calories burned from Pocket Health and sends each day back, shows your training days, ticks a habit, and with Pocket AI logs a meal you describe and reviews your week. Imports from MyFitnessPal and Cronometer.",
-		Icon:        "/favicon.svg", Version: Version,
+		Icon:        "/favicon.svg", Version: Version, Category: "Health",
 		URL: s.cfg.CoreAppURL, PublicURL: s.cfg.BaseURL, HealthPath: "/healthz", EnvPrefix: "NUTRITION",
-		Publishes: eventTopics,
-		Offers:    linkOffers,
-		Portable:  portable,
-		Uses:      append(linkUses(), core.InferenceUse()),
+		Publishes:    eventTopics,
+		Offers:       linkOffers,
+		Portable:     portable,
+		Capabilities: capabilities,
+		Uses:         append(linkUses(), core.InferenceUse()),
 	}
 	if s.cfg.BaseURL != "" {
 		m.OIDC = &core.OIDCRequest{RedirectURIs: []string{s.oidcCallbackURL()}}

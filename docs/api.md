@@ -90,6 +90,17 @@ Each day's totals go to Pocket Health as `dietary_energy`, `protein`, `carbs`, `
 
 Every payload has `user_email`.
 
+## Pocket Search, Day and Hub (`pocket:*` links)
+
+Each scope opens its one route and nothing else of the app; `nutrition:read` and `nutrition:write` do not open them. Energy in these answers is in the person's unit (kcal or kJ).
+
+| | |
+|---|---|
+| `GET /pocket/search?q=&limit=` | `{items: [{id, title, snippet, kind, date, url, score}]}`: your foods (`food:{id}`, the ones you log most first; `snippet` "72 kcal, 6.3 g protein, 0.3 g carbs and 4.8 g fat per 1 egg"; `url` `/foods/{id}`), saved meals (`meal:{id}`, their numbers, meal and how many foods; `url` `/meals?id={id}`), then diary entries with that name, newest first (`entry:{id}`, `snippet` "Fri 27 Nov 2026 · Breakfast · 143 kcal", `url` `/?date=`). Built-in foods you never logged are left out. `limit` 1–50 (8) |
+| `GET /pocket/day/YYYY-MM-DD` | `{date, summary, items: [{id, title, sub, kind, note, url}], metrics}`: one item per food eaten, in the diary's order (`sub` "Breakfast · 143 kcal", `kind` the meal; no `time`, the diary keeps none). `summary` "1,840 of 2,200 kcal, 1.6 l water", `metrics` Calories (Energy in kJ), Protein, Water. Nothing that day: empty. The goal counts calories burned only as far as Pocket Health already said (never a fresh call); `tz` is not used, days are plain dates |
+| `GET /pocket/widget` | today: `{line: "1,240 of 2,200 kcal", metrics: [Protein, Carbs, Fat, Water] ("40 of 120 g", "1.2 of 2 l"), items: [{id: meal, title: "Breakfast", detail: "Oats, banana · 420 kcal", url: "/"}], url: "/"}`; "Nothing logged yet today" when empty |
+| `POST /pocket/capture` | `{request_id, kind?: "food", title?, text?, date?}` → 201 `{id, title: "Banana · Lunch · 105 kcal", url: "/?date="}`. The line (the `title`, else the first line of `text`; the rest is the entry's note) becomes one entry on `date` (today when not given; today or earlier) in the meal for this hour. With calories in it ("Cake at work 350 kcal", "350 kcal", "1464 kJ") it is a quick add with that name; else it must be one of your foods (or the built-in list) by name, logged in the amount you logged last time, else its first serving, else 100 g or ml. No AI and nothing online. Anything else is a 400 with a sentence that says what to write. The same `request_id` (16–80 of `A-Z a-z 0-9 _ -`) again answers the same entry and adds nothing; the same id with other words is a 400. The entry has no source app, so the app that passed the line on cannot change or remove it; it is announced like any logged food (`nutrition.meal_logged`) |
+
 ## Box
 
 `GET /export.json` (everything of yours), `GET /export.csv` (the diary), `POST /import` (a Pocket Nutrition `.json` or `.csv`, MyFitnessPal's "Nutrition Summary" CSV, Cronometer's "Servings" CSV; importing again adds nothing), `GET /backup` (admin: the whole database). `GET /pocket/portable`: Pocket Move can copy your food diary out and bring it in (`move:export` / `move:import` links).
